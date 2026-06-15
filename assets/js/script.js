@@ -1,21 +1,10 @@
 /* ============================================================ RENDER PRODUCTS ============================================================ */
 function renderProducts(){
   const track = document.getElementById('prodTrack');
-  track.innerHTML = PRODUCTS.map((p,i)=>`
+  track.innerHTML = PRODUCTS.map((p)=>`
     <article class="pcard" tabindex="0">
-      <div class="pcard__img">
-        <img src="${p.img}" alt="">
-        <span class="pcard__num">${String(i+1).padStart(2,'0')}</span>
-        <span class="pcard__view"><span data-i18n="prod.view">View stone</span> →</span>
-      </div>
-      <div class="pcard__body">
-        <span class="pcard__cat" data-i18n="prod.${p.key}.cat"></span>
-        <h3 class="pcard__name" data-i18n="prod.${p.key}.name"></h3>
-        <p class="pcard__desc" data-i18n="prod.${p.key}.desc"></p>
-        <div class="pcard__finish">
-          ${p.finishes.map(f=>`<span class="finish-tag" data-i18n="${f}"></span>`).join('')}
-        </div>
-      </div>
+      <div class="pcard__frame"><span class="pcard__imgwrap"><img src="${p.img}" alt=""></span></div>
+      <h3 class="pcard__name" data-i18n="prod.${p.key}.name"></h3>
     </article>`).join('');
 }
 
