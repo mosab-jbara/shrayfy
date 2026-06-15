@@ -1,11 +1,15 @@
 /* ============================================================ RENDER PRODUCTS ============================================================ */
+const CAROUSEL_COPIES = 4; // product set is duplicated for a seamless infinite loop
 function renderProducts(){
   const track = document.getElementById('prodTrack');
-  track.innerHTML = PRODUCTS.map((p)=>`
-    <article class="pcard" tabindex="0">
-      <div class="pcard__frame"><span class="pcard__imgwrap"><img src="${p.img}" alt=""></span></div>
+  const card = (p)=>`
+    <article class="pcard" tabindex="-1">
+      <div class="pcard__frame"><span class="pcard__imgwrap"><img src="${p.img}" alt="" draggable="false"></span></div>
       <h3 class="pcard__name" data-i18n="prod.${p.key}.name"></h3>
-    </article>`).join('');
+    </article>`;
+  let html = '';
+  for(let i=0;i<CAROUSEL_COPIES;i++) html += PRODUCTS.map(card).join('');
+  track.innerHTML = html;
 }
 
 /* ============================================================ APPLY i18n ============================================================ */
@@ -67,39 +71,100 @@ burger.addEventListener('click', openDrawer);
 drawer.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click', closeDrawer));
 drawer.querySelectorAll('a.navlink').forEach(l=>l.addEventListener('click', closeDrawer));
 
-/* ============================================================ PRODUCTS CAROUSEL ============================================================ */
-let cIndex = 0;
-const track = ()=>document.getElementById('prodTrack');
-const prevBtn = document.getElementById('prodPrev');
-const nextBtn = document.getElementById('prodNext');
+/* ============================================================ PRODUCTS CAROUSEL (autoplay + pointer drag, infinite loop) ============================================================ */
+const AUTOPLAY_MS = 4000;
+const trackEl = ()=>document.getElementById('prodTrack');
+const wrapEl  = ()=>trackEl().parentElement;
+let setLen = 0;        // number of unique products
+let cIndex = 0;        // logical index into the looped track
+let autoTimer = null;
+let drag = null;
+
 function cardStep(){
-  const t = track();
-  const card = t.querySelector('.pcard');
+  const t = trackEl();
+  const card = t && t.querySelector('.pcard');
   if(!card) return 0;
   const gap = parseFloat(getComputedStyle(t).gap) || 24;
   return card.offsetWidth + gap;
 }
-function maxIndex(){
-  const t = track();
-  const wrap = t.parentElement;
-  const totalW = t.scrollWidth;
-  const visW = wrap.clientWidth;
-  const step = cardStep();
-  if(step===0) return 0;
-  return Math.max(0, Math.ceil((totalW - visW)/step));
-}
-function updateCarousel(){
-  const t = track();
+function setTransform(px, animate){
+  const t = trackEl();
   const rtl = document.documentElement.dir === 'rtl';
-  const offset = cIndex * cardStep();
-  t.style.transform = `translateX(${rtl ? offset : -offset}px)`;
-  prevBtn.disabled = cIndex <= 0;
-  nextBtn.disabled = cIndex >= maxIndex();
+  t.style.transition = animate ? '' : 'none';
+  t.style.transform = `translateX(${rtl ? px : -px}px)`;
 }
-function resetCarousel(){ cIndex = 0; updateCarousel(); }
-prevBtn.addEventListener('click', ()=>{ cIndex=Math.max(0,cIndex-1); updateCarousel(); });
-nextBtn.addEventListener('click', ()=>{ cIndex=Math.min(maxIndex(),cIndex+1); updateCarousel(); });
-window.addEventListener('resize', ()=>{ cIndex=Math.min(cIndex,maxIndex()); updateCarousel(); });
+function render(animate){ setTransform(cIndex * cardStep(), animate); }
+
+// keep cIndex inside the middle copies; snap instantly when crossing (clones are identical → invisible)
+function normalize(){
+  if(setLen<=0) return;
+  let snap = false;
+  while(cIndex >= 2*setLen){ cIndex -= setLen; snap = true; }
+  while(cIndex <  setLen){ cIndex += setLen; snap = true; }
+  if(snap) render(false);
+}
+function afterSettle(){
+  const t = trackEl();
+  const onEnd = (e)=>{ if(e.target!==t || e.propertyName!=='transform') return; t.removeEventListener('transitionend', onEnd); normalize(); };
+  t.addEventListener('transitionend', onEnd);
+  // fallback if no transition fires (e.g. zero-distance move)
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(!drag) normalize(); }));
+}
+function step(dir){ cIndex += dir; render(true); afterSettle(); }
+function resetCarousel(){ cIndex = setLen; render(false); }
+
+function startAuto(){ stopAuto(); if(setLen>0) autoTimer = setInterval(()=>step(1), AUTOPLAY_MS); }
+function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer = null; } }
+
+function initCarousel(){
+  setLen = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.length : 0;
+  cIndex = setLen;
+  render(false);
+  const wrap = wrapEl();
+
+  wrap.addEventListener('pointerdown', e=>{
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    drag = { x:e.clientX, base:cIndex*cardStep(), moved:false };
+    stopAuto();
+    try{ wrap.setPointerCapture(e.pointerId); }catch(_){}
+    wrap.classList.add('dragging');
+  });
+  wrap.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const rtl = document.documentElement.dir === 'rtl';
+    const dx = e.clientX - drag.x;
+    if(Math.abs(dx) > 3) drag.moved = true;
+    setTransform(drag.base + (rtl ? dx : -dx), false);
+  });
+  const endDrag = e=>{
+    if(!drag) return;
+    const rtl = document.documentElement.dir === 'rtl';
+    const dx = (typeof e.clientX === 'number' ? e.clientX : drag.x) - drag.x;
+    const step1 = cardStep() || 1;
+    cIndex = Math.round((drag.base + (rtl ? dx : -dx)) / step1);
+    drag = null;
+    wrap.classList.remove('dragging');
+    render(true);
+    afterSettle();
+    startAuto();
+  };
+  wrap.addEventListener('pointerup', endDrag);
+  wrap.addEventListener('pointercancel', endDrag);
+  wrap.addEventListener('dragstart', e=>e.preventDefault());
+
+  // pause autoplay while the pointer rests on the carousel
+  wrap.addEventListener('mouseenter', stopAuto);
+  wrap.addEventListener('mouseleave', ()=>{ if(!drag) startAuto(); });
+
+  // optional (hidden) arrow buttons still work if present
+  const pv = document.getElementById('prodPrev');
+  const nx = document.getElementById('prodNext');
+  if(pv) pv.addEventListener('click', ()=>{ step(-1); startAuto(); });
+  if(nx) nx.addEventListener('click', ()=>{ step(1);  startAuto(); });
+
+  window.addEventListener('resize', ()=> render(false));
+  startAuto();
+}
 
 /* ============================================================ REVEAL ON SCROLL ============================================================ */
 const io = new IntersectionObserver((entries)=>{
@@ -147,6 +212,6 @@ document.getElementById('year').textContent = new Date().getFullYear();
 renderProducts();
 applyLang('en');
 observeReveals();
-updateCarousel();
+initCarousel();
 const statsEl = document.querySelector('.stats');
 if(statsEl) statsIO.observe(statsEl);
