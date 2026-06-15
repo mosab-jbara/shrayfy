@@ -104,32 +104,64 @@
 <!-- ============================================================ ABOUT (About Us) ============================================================ -->
 <section class="section about" id="about">
   <div class="container about-grid">
+
+    <!-- LEFT — copy -->
     <div class="about-copy reveal">
       <span class="overline" data-i18n="about.eyebrow">About the company</span>
       <h2 data-i18n="about.title">From our quarries to your landmark projects</h2>
-      <p data-i18n="about.lead">
-        SHRAYFY Marble &amp; Granite is a specialist in natural stone — extracting, processing and supplying marble, granite and our signature shell stone from quarries we own and operate.
-      </p>
-      <p data-i18n="about.body">
+
+      <div class="about-intro">
+        <span class="about-intro__thumb">
+          <img src="/assets/images/project-06.jpg" alt="Shrayfy stonework — classical carved marble">
+        </span>
+        <p class="about-intro__text" data-i18n="about.lead">
+          SHRAYFY Marble &amp; Granite is a specialist in natural stone — extracting, processing and supplying marble, granite and our signature shell stone from quarries we own and operate.
+        </p>
+      </div>
+
+      <p class="about-copy__body" data-i18n="about.body">
         Built on long experience in the sector, we control the journey of every slab from the moment it leaves the earth: quarried, cut, finished and delivered. Our focus never changes — high quality, on-time delivery, and meeting each client's exact requirements through our own production and finishing facilities.
       </p>
+
       <ul class="about-list">
         <li><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="about.li1">Uncompromising quality</span></li>
         <li><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="about.li2">On-time delivery, every order</span></li>
         <li><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="about.li3">Built around your requirements</span></li>
       </ul>
+
       <div class="strength" data-i18n="about.strength">Our signature: natural Shell Stone — rich in shells and fossils, with a surface that reads quiet from afar and intricate up close.</div>
+
+      <a href="#products" class="btn btn-dark about-cta">
+        <span data-i18n="about.cta">Discover our stone</span>
+        <svg class="ic arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
     </div>
 
-    <div class="about-media reveal reveal-delay-1">
-      <div class="m-main"><img src="/assets/images/project-06.jpg" alt="Shrayfy stonework — classical marble columns"></div>
-      <div class="m-detail"><img src="/assets/images/project-10.jpg" alt="Shell stone staircase"></div>
-      <div class="m-badge">
-        <b data-i18n="about.badge.t">Own Quarries</b>
-        <p data-i18n="about.badge.d">From extraction to finishing, in-house.</p>
+    <!-- RIGHT — showcase -->
+    <div class="about-showcase reveal reveal-delay-1">
+      <div class="about-stat">
+        <div class="about-stat__num">25<span class="about-stat__plus">+</span></div>
+        <div class="about-stat__lbl" data-i18n="about.badge">Years in stone</div>
       </div>
+
+      <div class="about-swatches" aria-hidden="true">
+        <span class="about-swatch" style="background-image:url('/assets/textures/perlato.jpg')"></span>
+        <span class="about-swatch" style="background-image:url('/assets/textures/desert-gold.jpg')"></span>
+        <span class="about-swatch" style="background-image:url('/assets/textures/shanoon-beige.jpg')"></span>
+        <span class="about-swatch" style="background-image:url('/assets/textures/cedar-beige.jpg')"></span>
+        <span class="about-swatch" style="background-image:url('/assets/textures/thorontia.jpg')"></span>
+        <span class="about-swatch" style="background-image:url('/assets/textures/shanoon-sand.jpg')"></span>
+      </div>
+
+      <figure class="about-figure">
+        <img src="/assets/images/project-04.jpg" alt="Shrayfy interior — natural stone living hall">
+        <!-- <figcaption class="about-figure__badge">
+          <b data-i18n="about.badge.t">Own Quarries</b>
+          <span data-i18n="about.badge.d">From extraction to finishing, in-house.</span>
+        </figcaption> -->
+      </figure>
     </div>
-  </div>
+
   </div>
 </section>
 
@@ -139,7 +171,7 @@
     <div class="stats__grid">
       <div class="stat reveal"><div class="stat__num"><span data-count="25">0</span><span class="suffix">+</span></div><div class="stat__lbl" data-i18n="stats.years">Years of experience</div></div>
       <div class="stat reveal reveal-delay-1"><div class="stat__num"><span data-count="320">0</span><span class="suffix">+</span></div><div class="stat__lbl" data-i18n="stats.projects">Completed projects</div></div>
-      <div class="stat reveal reveal-delay-2"><div class="stat__num"><span data-count="18">0</span><span class="suffix">k m²</span></div><div class="stat__lbl" data-i18n="stats.factory">Factory area</div></div>
+      <div class="stat reveal reveal-delay-2"><div class="stat__num"><span data-count="18">0</span><span class="suffix" data-i18n="stats.km">k m²</span></div><div class="stat__lbl" data-i18n="stats.factory">Factory area</div></div>
       <div class="stat reveal reveal-delay-3"><div class="stat__num"><span data-count="5">0</span><span class="suffix">+</span></div><div class="stat__lbl" data-i18n="stats.types">Stone types</div></div>
     </div>
   </div>
