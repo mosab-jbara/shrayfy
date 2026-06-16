@@ -37,6 +37,8 @@ function applyLang(lang){
 
   // reset carousel position on dir change
   if(typeof resetCarousel === 'function') resetCarousel();
+  // refresh an open project gallery in the new language
+  if(typeof refreshGalleryLang === 'function') refreshGalleryLang();
 }
 
 /* ============================================================ HEADER SCROLL ============================================================ */
@@ -207,11 +209,107 @@ document.getElementById('formBtn').addEventListener('click', ()=>{
   setTimeout(()=>{ span.textContent = original; btn.style.background=''; }, 2200);
 });
 
+/* ============================================================ PROJECT GALLERY (lightbox) ============================================================ */
+let galProject = null;   // current PROJECT_GALLERIES entry
+let galIndex = 0;        // index of the visible image
+let galTrigger = null;   // the card that opened the gallery (for focus restore)
+
+const galEl = ()=>document.getElementById('gallery');
+function galText(node, val){ if(node) node.textContent = val || ''; }
+
+function renderGalleryImage(){
+  if(!galProject) return;
+  const imgs = galProject.images;
+  galIndex = (galIndex + imgs.length) % imgs.length;   // wrap around
+  const item = imgs[galIndex];
+  const lang = currentLang;
+  const img = document.getElementById('galleryImg');
+  img.src = item.src;
+  img.alt = item.title[lang] || item.title.en;
+  img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';  // restart fade
+  galText(document.getElementById('galleryTitle'), item.title[lang] || item.title.en);
+  galText(document.getElementById('galleryDesc'),  item.desc[lang]  || item.desc.en);
+  galText(document.getElementById('galleryCounter'), (galIndex+1) + ' / ' + imgs.length);
+  document.querySelectorAll('#galleryThumbs .gthumb').forEach((t,i)=>{
+    const on = i===galIndex;
+    t.classList.toggle('active', on);
+    if(on) t.scrollIntoView({block:'nearest', inline:'nearest'});
+  });
+}
+
+function renderGalleryHead(){
+  if(!galProject) return;
+  const dict = I18N[currentLang] || {};
+  galText(document.getElementById('galleryCat'), dict[galProject.catKey]);
+  galText(document.getElementById('galleryProject'), dict[galProject.titleKey]);
+}
+
+function buildGalleryThumbs(){
+  const wrap = document.getElementById('galleryThumbs');
+  wrap.innerHTML = galProject.images.map((im,i)=>
+    `<button class="gthumb" data-idx="${i}" aria-label="Image ${i+1}"><img src="${im.src}" alt="" loading="lazy"></button>`
+  ).join('');
+  wrap.querySelectorAll('.gthumb').forEach(b=>
+    b.addEventListener('click', ()=>{ galIndex = +b.dataset.idx; renderGalleryImage(); }));
+}
+
+function openGallery(id, trigger){
+  galProject = (typeof PROJECT_GALLERIES !== 'undefined') ? PROJECT_GALLERIES[id] : null;
+  if(!galProject) return;
+  galIndex = 0;
+  galTrigger = trigger || null;
+  renderGalleryHead();
+  buildGalleryThumbs();
+  renderGalleryImage();
+  const g = galEl();
+  g.classList.add('open');
+  g.setAttribute('aria-hidden','false');
+  document.body.classList.add('gallery-open');
+  const closeBtn = g.querySelector('.gallery__close');
+  if(closeBtn) closeBtn.focus();
+}
+
+function closeGallery(){
+  const g = galEl();
+  g.classList.remove('open');
+  g.setAttribute('aria-hidden','true');
+  document.body.classList.remove('gallery-open');
+  galProject = null;
+  if(galTrigger){ try{ galTrigger.focus(); }catch(_){} galTrigger = null; }
+}
+
+function galleryStep(dir){ if(galProject){ galIndex += dir; renderGalleryImage(); } }
+
+// re-render the open gallery's text when the language toggles
+function refreshGalleryLang(){ if(galProject){ renderGalleryHead(); renderGalleryImage(); } }
+
+function initGallery(){
+  const g = galEl();
+  if(!g) return;
+  document.querySelectorAll('.proj[data-project]').forEach(card=>{
+    card.addEventListener('click', e=>{
+      e.preventDefault();
+      openGallery(card.dataset.project, card);
+    });
+  });
+  g.querySelectorAll('[data-gclose]').forEach(el=>el.addEventListener('click', closeGallery));
+  document.getElementById('galleryPrev').addEventListener('click', ()=>galleryStep(-1));
+  document.getElementById('galleryNext').addEventListener('click', ()=>galleryStep(1));
+  document.addEventListener('keydown', e=>{
+    if(!galProject) return;
+    if(e.key === 'Escape'){ closeGallery(); return; }
+    const rtl = document.documentElement.dir === 'rtl';
+    if(e.key === 'ArrowRight') galleryStep(rtl ? -1 : 1);
+    else if(e.key === 'ArrowLeft') galleryStep(rtl ? 1 : -1);
+  });
+}
+
 /* ============================================================ INIT ============================================================ */
 document.getElementById('year').textContent = new Date().getFullYear();
 renderProducts();
 applyLang('en');
 observeReveals();
 initCarousel();
+initGallery();
 const statsEl = document.querySelector('.stats');
 if(statsEl) statsIO.observe(statsEl);
